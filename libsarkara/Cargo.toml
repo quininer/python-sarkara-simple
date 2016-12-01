@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["quininer kel <quininer@live.com>"]
 
 [lib]
-name = "sarkara"
+name = "libsarkara"
 crate-type = ["dylib"]
 
 [dependencies]
