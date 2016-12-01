@@ -1,0 +1,12 @@
+[package]
+name = "python-sarkara-simple"
+version = "0.1.0"
+authors = ["quininer kel <quininer@live.com>"]
+
+[lib]
+name = "sarkara"
+crate-type = ["dylib"]
+
+[dependencies]
+cpython = { git = "https://github.com/dgrunwald/rust-cpython" }
+sarkara = "0.6"
