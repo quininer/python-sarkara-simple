@@ -46,10 +46,10 @@ macro_rules! aead {
 macro_rules! kex {
     ( fn $keygen:ident, fn $exchange:ident, fn $exchange_from:ident, $ty:ident ; $py:expr, $m:expr ) => {
         fn $keygen(py: Python) -> PyResult<(PyBytes, PyBytes)> {
-            let (pk, sk) = $ty::keygen();
-            let pk: Vec<u8> = pk.into();
+            let (sk, pk) = $ty::keygen();
             let sk: Vec<u8> = sk.into();
-            Ok((PyBytes::new(py, &pk), PyBytes::new(py, &sk)))
+            let pk: Vec<u8> = pk.into();
+            Ok((PyBytes::new(py, &sk), PyBytes::new(py, &pk)))
         }
 
         fn $exchange(py: Python, pk: PyBytes) -> PyResult<(PyBytes, PyBytes)> {
