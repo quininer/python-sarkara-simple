@@ -15,7 +15,7 @@ macro_rules! aead {
                 .decrypt(nonce.data(py), data.data(py))
             {
                 Ok(output) => Ok(PyBytes::new(py, &output)),
-                Err(err) => Err(PyErr::new::<Exception, _>(py, PyString::new(py, err.description())))
+                Err(err) => Err(PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))
             }
         }
 
@@ -35,7 +35,7 @@ macro_rules! kex {
 
         fn $exchange(py: Python, pk: PyBytes) -> PyResult<(PyBytes, PyBytes)> {
             let pk = <$ty as KeyExchange>::PublicKey::try_from(pk.data(py))
-                .map_err(|err| PyErr::new::<Exception, _>(py, PyString::new(py, err.description())))?;
+                .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))?;
             let mut output = vec![0; 32];
             let rec: Vec<u8> = $ty::exchange(&mut output, &pk).into();
             Ok((PyBytes::new(py, &output), PyBytes::new(py, &rec)))
@@ -43,9 +43,9 @@ macro_rules! kex {
 
         fn $exchange_from(py: Python, sk: PyBytes, rec: PyBytes) -> PyResult<PyBytes> {
             let sk = <$ty as KeyExchange>::PrivateKey::try_from(sk.data(py))
-                .map_err(|err| PyErr::new::<Exception, _>(py, PyString::new(py, err.description())))?;
+                .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))?;
             let rec = <$ty as KeyExchange>::Reconciliation::try_from(rec.data(py))
-                .map_err(|err| PyErr::new::<Exception, _>(py, PyString::new(py, err.description())))?;
+                .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))?;
             let mut output = vec![0; 32];
             $ty::exchange_from(&mut output, &sk, &rec);
             Ok(PyBytes::new(py, &output))
@@ -68,16 +68,16 @@ macro_rules! sign {
 
         fn $sign(py: Python, sk: PyBytes, data: PyBytes) -> PyResult<PyBytes> {
             let sk = <$ty as Signature>::PrivateKey::try_from(sk.data(py))
-                .map_err(|err| PyErr::new::<Exception, _>(py, PyString::new(py, err.description())))?;
+                .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))?;
             let signdata: Vec<u8> = $ty::signature(&sk, data.data(py)).into();
             Ok(PyBytes::new(py, &signdata))
         }
 
         fn $verify(py: Python, pk: PyBytes, signdata: PyBytes, data: PyBytes) -> PyResult<bool> {
             let pk = <$ty as Signature>::PublicKey::try_from(pk.data(py))
-                .map_err(|err| PyErr::new::<Exception, _>(py, PyString::new(py, err.description())))?;
+                .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))?;
             let signdata = <$ty as Signature>::Signature::try_from(signdata.data(py))
-                .map_err(|err| PyErr::new::<Exception, _>(py, PyString::new(py, err.description())))?;
+                .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))?;
             Ok($ty::verify(&pk, &signdata, data.data(py)))
         }
 

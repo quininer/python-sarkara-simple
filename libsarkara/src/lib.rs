@@ -3,6 +3,11 @@
 extern crate sarkara;
 #[macro_use] extern crate cpython;
 
+
+#[allow(non_upper_case_globals)]
+mod exc {
+    py_exception!(libsarkara, CryptoException);
+}
 #[macro_use] mod macros;
 
 use std::error::Error;
@@ -14,7 +19,7 @@ use sarkara::hash::Blake2b;
 use sarkara::kex::{ KeyExchange, NewHope };
 use sarkara::sign::{ Signature, Bliss };
 use cpython::{ Python, PyResult, PyErr, PyBytes, PyString };
-use cpython::exc::Exception;
+use exc::CryptoException;
 
 type HHBB = General<HC256, HMAC<Blake2b>, Blake2b>;
 type HRHB = RivGeneral<HC256, HMAC<Blake2b>, Blake2b>;
@@ -22,6 +27,7 @@ type HRHB = RivGeneral<HC256, HMAC<Blake2b>, Blake2b>;
 
 py_module_initializer!(libsarkara, initlibsarkara, PyInit_libsarkara, |py, m| {
     m.add(py, "__doc__", "Sarkara is a Post-Quantum cryptography library.")?;
+    m.add(py, "CryptoException", py.get_type::<CryptoException>())?;
 
     aead!(fn ascon_encrypt, fn ascon_decrypt, Ascon; py, m);
     aead!(fn hhbb_encrypt, fn hhbb_decrypt, HHBB; py, m);
