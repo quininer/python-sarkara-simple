@@ -1,2 +1,5 @@
 target
 Cargo.lock
+.cache/
+__pycache__/
+*.so
