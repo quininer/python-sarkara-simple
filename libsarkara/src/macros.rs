@@ -86,3 +86,29 @@ macro_rules! sign {
         $m.add($py, stringify!($verify), py_fn!($py, $verify(pk: PyBytes, signdata: PyBytes, data: PyBytes)))?;
     }
 }
+
+macro_rules! pwhash {
+    ( fn $derive:ident, fn $verify:ident, $ty:ident ; $py:expr, $m:expr ) => {
+        fn $derive(py: Python, key: PyBytes, aad: PyBytes, salt: PyBytes, password: PyBytes) -> PyResult<PyBytes> {
+            $ty::default()
+                .with_key(key.data(py))
+                .with_aad(aad.data(py))
+                .derive::<Vec<u8>>(password.data(py), salt.data(py))
+                .map(|output| PyBytes::new(py, &output))
+                .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))
+        }
+
+        fn $verify(py: Python, key: PyBytes, aad: PyBytes, salt: PyBytes, password: PyBytes, hash: PyBytes) -> PyResult<bool> {
+            let hash = hash.data(py);
+            $ty::default()
+                .with_key(key.data(py))
+                .with_aad(aad.data(py))
+                .with_size(hash.len())
+                .verify(password.data(py), salt.data(py), hash)
+                .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))
+        }
+
+        $m.add($py, stringify!($derive), py_fn!($py, $derive(key: PyBytes, aad: PyBytes, salt: PyBytes, password: PyBytes)))?;
+        $m.add($py, stringify!($verify), py_fn!($py, $verify(key: PyBytes, aad: PyBytes, salt: PyBytes, password: PyBytes, hash: PyBytes)))?;
+    }
+}
