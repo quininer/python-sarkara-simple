@@ -89,10 +89,11 @@ macro_rules! sign {
 
 macro_rules! pwhash {
     ( fn $derive:ident, fn $verify:ident, $ty:ident ; $py:expr, $m:expr ) => {
-        fn $derive(py: Python, key: PyBytes, aad: PyBytes, salt: PyBytes, password: PyBytes) -> PyResult<PyBytes> {
+        fn $derive(py: Python, key: PyBytes, aad: PyBytes, salt: PyBytes, password: PyBytes, len: PyInt) -> PyResult<PyBytes> {
             $ty::default()
                 .with_key(key.data(py))
                 .with_aad(aad.data(py))
+                .with_size(len.into_object().extract::<usize>(py)?)
                 .derive::<Vec<u8>>(password.data(py), salt.data(py))
                 .map(|output| PyBytes::new(py, &output))
                 .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))
@@ -108,7 +109,34 @@ macro_rules! pwhash {
                 .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))
         }
 
-        $m.add($py, stringify!($derive), py_fn!($py, $derive(key: PyBytes, aad: PyBytes, salt: PyBytes, password: PyBytes)))?;
+        $m.add($py, stringify!($derive), py_fn!($py, $derive(key: PyBytes, aad: PyBytes, salt: PyBytes, password: PyBytes, len: PyInt)))?;
         $m.add($py, stringify!($verify), py_fn!($py, $verify(key: PyBytes, aad: PyBytes, salt: PyBytes, password: PyBytes, hash: PyBytes)))?;
+    }
+}
+
+macro_rules! auth {
+    ( fn $result:ident, fn $verify:ident, $ty:ident ; $py:expr, $m:expr ) => {
+        fn $result(py: Python, key: PyBytes, nonce: PyBytes, data: PyBytes, len: PyInt) -> PyResult<PyBytes> {
+            Ok(PyBytes::new(
+                py,
+                &$ty::new(key.data(py))
+                    .with_nonce(nonce.data(py))
+                    .with_size(len.into_object().extract::<usize>(py)?)
+                    .result::<Vec<u8>>(data.data(py))
+            ))
+        }
+
+        fn $verify(py: Python, key: PyBytes, nonce: PyBytes, data: PyBytes, tag: PyBytes) -> PyResult<bool> {
+            let tag = tag.data(py);
+            Ok(
+                $ty::new(key.data(py))
+                    .with_nonce(nonce.data(py))
+                    .with_size(tag.len())
+                    .verify(data.data(py), tag)
+            )
+        }
+
+        $m.add($py, stringify!($result), py_fn!($py, $result(key: PyBytes, nonce: PyBytes, data: PyBytes, len: PyInt)))?;
+        $m.add($py, stringify!($verify), py_fn!($py, $verify(key: PyBytes, nonce: PyBytes, data: PyBytes, tag: PyBytes)))?;
     }
 }
