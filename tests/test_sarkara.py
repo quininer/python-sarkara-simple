@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-from random import getrandbits
+from random import getrandbits, randrange
 from libsarkara import (
     CryptoException,
     ascon_encrypt, ascon_decrypt,
     newhope_keygen, newhope_exchange, newhope_exchange_from,
     bliss_keygen, bliss_sign, bliss_verify,
-    argon2i_derive, argon2i_verify
+    argon2i_derive, argon2i_verify,
+    bmac_result, bmac_verify
 )
 
 
@@ -89,9 +90,11 @@ class Test:
         aad = randbytes(32)
         salt = randbytes(12)
         password = randbytes(8)
+        length = randrange(16, 64)
 
-        out = argon2i_derive(key, aad, salt, password)
-        assert out == argon2i_derive(key, aad, salt, password)
+        out = argon2i_derive(key, aad, salt, password, length)
+        assert len(out) == length
+        assert out == argon2i_derive(key, aad, salt, password, length)
         assert argon2i_verify(key, aad, salt, password, out)
         assert not argon2i_verify(
             bytes([key[0] ^ 1]) + key[1:],
@@ -104,7 +107,7 @@ class Test:
         )
 
         try:
-            argon2i_derive(key, aad, randbytes(7), password)
+            argon2i_derive(key, aad, randbytes(7), password, length)
             assert False
         except CryptoException:
             pass
@@ -114,3 +117,27 @@ class Test:
             assert False
         except CryptoException:
             pass
+
+    def test_auth(self):
+        key = randbytes(32)
+        nonce = randbytes(32)
+        data = randbytes(64)
+        length = randrange(16, 64)
+
+        out = bmac_result(key, nonce, data, length)
+        assert len(out) == length
+        assert out == bmac_result(key, nonce, data, length)
+        assert bmac_verify(key, nonce, data, out)
+        assert not bmac_verify(
+            bytes([key[0] ^ 1]) + key[1:],
+            nonce, data, out
+        )
+        assert not bmac_verify(
+            key, nonce, data,
+            bytes([out[0] ^ 1]) + out[1:]
+        )
+        assert not bmac_verify(
+            key, nonce,
+            bytes([data[0] ^ 1]) + data[1:],
+            out
+        )
