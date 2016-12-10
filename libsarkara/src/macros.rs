@@ -33,27 +33,27 @@ macro_rules! kex {
             Ok((PyBytes::new(py, &sk), PyBytes::new(py, &pk)))
         }
 
-        fn $exchange(py: Python, pk: PyBytes) -> PyResult<(PyBytes, PyBytes)> {
+        fn $exchange(py: Python, pk: PyBytes, len: PyInt) -> PyResult<(PyBytes, PyBytes)> {
             let pk = <$ty as KeyExchange>::PublicKey::try_from(pk.data(py))
                 .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))?;
-            let mut output = vec![0; 32];
+            let mut output = vec![0; len.into_object().extract::<usize>(py)?];
             let rec: Vec<u8> = $ty::exchange(&mut output, &pk).into();
             Ok((PyBytes::new(py, &output), PyBytes::new(py, &rec)))
         }
 
-        fn $exchange_from(py: Python, sk: PyBytes, rec: PyBytes) -> PyResult<PyBytes> {
+        fn $exchange_from(py: Python, sk: PyBytes, rec: PyBytes, len: PyInt) -> PyResult<PyBytes> {
             let sk = <$ty as KeyExchange>::PrivateKey::try_from(sk.data(py))
                 .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))?;
             let rec = <$ty as KeyExchange>::Reconciliation::try_from(rec.data(py))
                 .map_err(|err| PyErr::new::<CryptoException, _>(py, PyString::new(py, err.description())))?;
-            let mut output = vec![0; 32];
+            let mut output = vec![0; len.into_object().extract::<usize>(py)?];
             $ty::exchange_from(&mut output, &sk, &rec);
             Ok(PyBytes::new(py, &output))
         }
 
         $m.add($py, stringify!($keygen), py_fn!($py, $keygen()))?;
-        $m.add($py, stringify!($exchange), py_fn!($py, $exchange(pk: PyBytes)))?;
-        $m.add($py, stringify!($exchange_from), py_fn!($py, $exchange_from(sk: PyBytes, rec: PyBytes)))?;
+        $m.add($py, stringify!($exchange), py_fn!($py, $exchange(pk: PyBytes, len: PyInt)))?;
+        $m.add($py, stringify!($exchange_from), py_fn!($py, $exchange_from(sk: PyBytes, rec: PyBytes, len: PyInt)))?;
     }
 }
 

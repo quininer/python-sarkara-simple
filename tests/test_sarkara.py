@@ -39,20 +39,22 @@ class Test:
 
     def test_kex(self):
         sk, pk = newhope_keygen()
-        out, rec = newhope_exchange(pk)
+        length = randrange(16, 64)
+        out, rec = newhope_exchange(pk, length)
 
-        assert out == newhope_exchange_from(sk, rec)
-        assert out != newhope_exchange_from(bytes([sk[0] ^ 1]) + sk[1:], rec)
-        assert out != newhope_exchange_from(sk, bytes([rec[0] ^ 1]) + rec[1:])
+        assert length == len(out)
+        assert out == newhope_exchange_from(sk, rec, length)
+        assert out != newhope_exchange_from(bytes([sk[0] ^ 1]) + sk[1:], rec, length)
+        assert out != newhope_exchange_from(sk, bytes([rec[0] ^ 1]) + rec[1:], length)
 
         try:
-            newhope_exchange(pk[:-1])
+            newhope_exchange(pk[:-1], length)
             assert False
         except CryptoException:
             pass
 
         try:
-            newhope_exchange_from(sk, rec[:-1])
+            newhope_exchange_from(sk, rec[:-1], length)
             assert False
         except CryptoException:
             pass
