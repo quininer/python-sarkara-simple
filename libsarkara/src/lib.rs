@@ -21,9 +21,9 @@ use sarkara::pwhash::{ KeyDerive, KeyVerify, Argon2i };
 use cpython::{ PythonObject, Python, PyResult, PyErr, PyBytes, PyString, PyInt };
 use exc::CryptoException;
 
-type BMAC = HMAC<Blake2b>;
-type HHBB = General<HC256, BMAC, Blake2b>;
-type HRHB = RivGeneral<HC256, BMAC, Blake2b>;
+type BHMAC = HMAC<Blake2b>;
+type HHBB = General<HC256, BHMAC, Blake2b>;
+type HRHB = RivGeneral<HC256, BHMAC, Blake2b>;
 
 include!("macros.rs");
 
@@ -42,7 +42,7 @@ py_module_initializer!(libsarkara, initlibsarkara, PyInit_libsarkara, |py, m| {
 
     pwhash!(fn argon2i_derive, fn argon2i_verify, Argon2i; py, m);
 
-    auth!(fn bmac_result, fn bmac_verify, BMAC; py, m);
+    auth!(fn bhmac_result, fn bhmac_verify, BHMAC; py, m);
 
     Ok(())
 });

@@ -7,7 +7,7 @@ from libsarkara import (
     newhope_keygen, newhope_exchange, newhope_exchange_from,
     bliss_keygen, bliss_sign, bliss_verify,
     argon2i_derive, argon2i_verify,
-    bmac_result, bmac_verify
+    bhmac_result, bhmac_verify
 )
 
 
@@ -124,19 +124,19 @@ class Test:
         data = randbytes(64)
         length = randrange(16, 64)
 
-        out = bmac_result(key, nonce, data, length)
+        out = bhmac_result(key, nonce, data, length)
         assert len(out) == length
-        assert out == bmac_result(key, nonce, data, length)
-        assert bmac_verify(key, nonce, data, out)
-        assert not bmac_verify(
+        assert out == bhmac_result(key, nonce, data, length)
+        assert bhmac_verify(key, nonce, data, out)
+        assert not bhmac_verify(
             bytes([key[0] ^ 1]) + key[1:],
             nonce, data, out
         )
-        assert not bmac_verify(
+        assert not bhmac_verify(
             key, nonce, data,
             bytes([out[0] ^ 1]) + out[1:]
         )
-        assert not bmac_verify(
+        assert not bhmac_verify(
             key, nonce,
             bytes([data[0] ^ 1]) + data[1:],
             out
