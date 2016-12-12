@@ -140,3 +140,19 @@ macro_rules! auth {
         $m.add($py, stringify!($verify), py_fn!($py, $verify(key: PyBytes, nonce: PyBytes, data: PyBytes, tag: PyBytes)))?;
     }
 }
+
+macro_rules! hash {
+    ( fn $hash:ident, $ty:ident ; $py:expr, $m:expr ) => {
+        fn $hash(py: Python, key: PyBytes, data: PyBytes, len: PyInt) -> PyResult<PyBytes> {
+            Ok(PyBytes::new(
+                py,
+                &$ty::default()
+                    .with_key(key.data(py))
+                    .with_size(len.into_object().extract::<usize>(py)?)
+                    .hash::<Vec<u8>>(data.data(py))
+            ))
+        }
+
+        $m.add($py, stringify!($hash), py_fn!($py, $hash(key: PyBytes, data: PyBytes, len: PyInt)))?;
+    }
+}

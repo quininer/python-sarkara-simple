@@ -7,7 +7,8 @@ from libsarkara import (
     newhope_keygen, newhope_exchange, newhope_exchange_from,
     bliss_keygen, bliss_sign, bliss_verify,
     argon2i_derive, argon2i_verify,
-    bhmac_result, bhmac_verify
+    bhmac_result, bhmac_verify,
+    blake2b_hash
 )
 
 
@@ -142,4 +143,23 @@ class Test:
             key, nonce,
             bytes([data[0] ^ 1]) + data[1:],
             out
+        )
+
+    def test_hash(self):
+        key = randbytes(16)
+        data = randbytes(64)
+        length = randrange(16, 64)
+
+        out = blake2b_hash(key, data, length)
+        assert len(out) == length
+        assert out == blake2b_hash(key, data, length)
+        assert out != blake2b_hash(
+            bytes([key[0] ^ 1]) + key[1:],
+            data,
+            length
+        )
+        assert out != blake2b_hash(
+            key,
+            bytes([data[0] ^ 1]) + data[1:],
+            length
         )

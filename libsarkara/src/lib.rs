@@ -14,7 +14,7 @@ use std::convert::TryFrom;
 use sarkara::aead::{ AeadCipher, Ascon, General, RivGeneral };
 use sarkara::stream::HC256;
 use sarkara::auth::{ Mac, NonceMac, HMAC };
-use sarkara::hash::Blake2b;
+use sarkara::hash::{ Hash, GenericHash, Blake2b };
 use sarkara::kex::{ KeyExchange, NewHope };
 use sarkara::sign::{ Signature, Bliss };
 use sarkara::pwhash::{ KeyDerive, KeyVerify, Argon2i };
@@ -43,6 +43,8 @@ py_module_initializer!(libsarkara, initlibsarkara, PyInit_libsarkara, |py, m| {
     pwhash!(fn argon2i_derive, fn argon2i_verify, Argon2i; py, m);
 
     auth!(fn bhmac_result, fn bhmac_verify, BHMAC; py, m);
+
+    hash!(fn blake2b_hash, Blake2b; py, m);
 
     Ok(())
 });
